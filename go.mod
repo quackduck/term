@@ -1,4 +1,4 @@
-module golang.org/x/term
+module github.com/quackduck/term
 
 go 1.17
 
