@@ -565,6 +565,9 @@ func (t *Terminal) handleKey(key rune) (line string, ok bool) {
 			t.pos++
 			t.eraseNPreviousChars(1)
 		}
+	case keyCtrlC:
+		// delete the current line
+		t.setLine([]rune{}, 0)
 	case keyCtrlU:
 		t.eraseNPreviousChars(t.pos)
 	case keyClearScreen:
@@ -755,9 +758,6 @@ func (t *Terminal) readLine() (line string, err error) {
 					if len(t.line) == 0 {
 						return "", io.EOF
 					}
-				}
-				if key == keyCtrlC {
-					return "", io.EOF
 				}
 				if key == keyPasteStart {
 					t.pasteActive = true
