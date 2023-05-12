@@ -168,6 +168,8 @@ func bytesToKey(b []byte, pasteActive bool) (rune, []byte) {
 			return keyDeleteWord, b[1:]
 		case 14: // ^N
 			return keyDown, b[1:]
+		//case 14: // ^N
+		//	return '\n', b[1:]
 		case 16: // ^P
 			return keyUp, b[1:]
 		}
@@ -246,10 +248,12 @@ func (t *Terminal) queue(data []rune) {
 	t.outBuf = append(t.outBuf, []byte(string(data))...)
 }
 
-var eraseUnderCursor = []rune{' ', keyEscape, '[', 'D'}
 var space = []rune{' '}
 
 func isPrintable(key rune) bool {
+	//if key == '\n' {
+	//	return true
+	//}
 	isInSurrogateArea := key >= 0xd800 && key <= 0xdbff
 	return key >= 32 && !isInSurrogateArea
 }
@@ -733,8 +737,17 @@ func (t *Terminal) ReadLine() (line string, err error) {
 	return t.readLine()
 }
 
+//var nextReadLine = make([]string, 0, 5)
+
 func (t *Terminal) readLine() (line string, err error) {
 	// t.lock must be held at this point
+
+	//if len(nextReadLine) > 0 {
+	//	fmt.Println("true")
+	//	line = nextReadLine[0]
+	//	nextReadLine = nextReadLine[1:]
+	//	return
+	//}
 
 	if t.cursorX == 0 && t.cursorY == 0 {
 		t.writeLine(t.prompt)
@@ -750,6 +763,21 @@ func (t *Terminal) readLine() (line string, err error) {
 		for !lineOk {
 			var key rune
 			key, rest = bytesToKey(rest, t.pasteActive)
+			//fmt.Println("rest len '", len(rest), "'", "key '", key, "pasteActive '", t.pasteActive, "'")
+			//if key == '\n' {
+			//	key = 0
+			//	//fmt.Println("key == '\\n'")
+			//	//go func() {
+			//	nextReadLine = append(nextReadLine, l)
+			//	fmt.Println("nextreadline", nextReadLine)
+			//	l, e := t.readLine()
+			//	if e != nil {
+			//		err = e
+			//		return
+			//	}
+			//	//}()
+			//	continue
+			//}
 			if key == utf8.RuneError {
 				break
 			}
@@ -948,7 +976,7 @@ func (s *stRingBuffer) Add(a string) {
 // next most recent, and so on. If such an element doesn't exist then ok is
 // false.
 func (s *stRingBuffer) NthPreviousEntry(n int) (value string, ok bool) {
-	if n >= s.size {
+	if n < 0 || n >= s.size {
 		return "", false
 	}
 	index := s.head - n
